@@ -6,7 +6,10 @@ Licensed under terms of MIT license (see LICENSE)
 // Package talib is a pure Go port of TA-Lib (http://ta-lib.org) Technical Analysis Library
 package talib
 
-import "math"
+import (
+	"errors"
+	"math"
+)
 
 // MaType - Moving average type
 type MaType int
