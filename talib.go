@@ -6,15 +6,12 @@ Licensed under terms of MIT license (see LICENSE)
 // Package talib is a pure Go port of TA-Lib (http://ta-lib.org) Technical Analysis Library
 package talib
 
-import (
-	"errors"
-	"math"
-)
+import "math"
 
 // MaType - Moving average type
 type MaType int
 
-type moneyFlow struct {
+type MoneyFlow struct {
 	positive float64
 	negative float64
 }
@@ -470,7 +467,7 @@ func Ma(inReal []float64, inTimePeriod int, inMAType MaType) []float64 {
 
 	switch inMAType {
 	case SMA:
-		outReal = Sma(inReal, inTimePeriod)
+		outReal = Sma(inReal, inTimePeriod, outReal)
 	case EMA:
 		outReal = Ema(inReal, inTimePeriod)
 	case WMA:
@@ -1148,9 +1145,9 @@ func SarExt(inHigh []float64, inLow []float64,
 }
 
 // Sma - Simple Moving Average
-func Sma(inReal []float64, inTimePeriod int) []float64 {
+func Sma(inReal []float64, inTimePeriod int, outReal []float64) []float64 {
 
-	outReal := make([]float64, len(inReal))
+	//outReal := make([]float64, len(inReal))
 
 	lookbackTotal := inTimePeriod - 1
 	startIdx := lookbackTotal
@@ -2312,12 +2309,12 @@ func MinusDM(inHigh []float64, inLow []float64, inTimePeriod int) []float64 {
 }
 
 // Mfi - Money Flow Index
-func Mfi(inHigh []float64, inLow []float64, inClose []float64, inVolume []float64, inTimePeriod int) []float64 {
+func Mfi(inHigh []float64, inLow []float64, inClose []float64, inVolume []float64, inTimePeriod int, outReal []float64, mflow []MoneyFlow) []float64 {
 
-	outReal := make([]float64, len(inClose))
+	//outReal := make([]float64, len(inClose))
 	mflowIdx := 0
 	maxIdxMflow := (50 - 1)
-	mflow := make([]moneyFlow, inTimePeriod)
+	//mflow := make([]moneyFlow, inTimePeriod)
 	maxIdxMflow = inTimePeriod - 1
 	lookbackTotal := inTimePeriod
 	startIdx := lookbackTotal
@@ -2804,9 +2801,9 @@ func Rocr100(inReal []float64, inTimePeriod int) []float64 {
 }
 
 // Rsi - Relative strength index
-func Rsi(inReal []float64, inTimePeriod int) []float64 {
+func Rsi(inReal []float64, inTimePeriod int, outReal []float64) []float64 {
 
-	outReal := make([]float64, len(inReal))
+	//outReal := make([]float64, len(inReal))
 
 	if inTimePeriod < 2 {
 		return outReal
@@ -3058,7 +3055,9 @@ func StochRsi(inReal []float64, inTimePeriod int, inFastKPeriod int, inFastDPeri
 	lookbackSTOCHF := (inFastKPeriod - 1) + (inFastDPeriod - 1)
 	lookbackTotal := inTimePeriod + lookbackSTOCHF
 	startIdx := lookbackTotal
-	tempRSIBuffer := Rsi(inReal, inTimePeriod)
+
+	outReal := make([]float64, len(inReal))
+	tempRSIBuffer := Rsi(inReal, inTimePeriod, outReal)
 	tempk, tempd := StochF(tempRSIBuffer, tempRSIBuffer, tempRSIBuffer, inFastKPeriod, inFastDPeriod, inFastDMAType)
 
 	for i := startIdx; i < len(inReal); i++ {
@@ -3522,9 +3521,9 @@ func Obv(inReal []float64, inVolume []float64) []float64 {
 /* Volatility Indicators */
 
 // Atr - Average True Range
-func Atr(inHigh []float64, inLow []float64, inClose []float64, inTimePeriod int) []float64 {
+func Atr(inHigh []float64, inLow []float64, inClose []float64, inTimePeriod int, outReal []float64) []float64 {
 
-	outReal := make([]float64, len(inClose))
+	//outReal := make([]float64, len(inClose))
 
 	inTimePeriodF := float64(inTimePeriod)
 
@@ -3533,14 +3532,14 @@ func Atr(inHigh []float64, inLow []float64, inClose []float64, inTimePeriod int)
 	}
 
 	if inTimePeriod <= 1 {
-		return TRange(inHigh, inLow, inClose)
+		return TRange(inHigh, inLow, inClose, outReal)
 	}
 
 	outIdx := inTimePeriod
 	today := inTimePeriod + 1
 
-	tr := TRange(inHigh, inLow, inClose)
-	prevATRTemp := Sma(tr, inTimePeriod)
+	tr := TRange(inHigh, inLow, inClose, outReal)
+	prevATRTemp := Sma(tr, inTimePeriod, outReal)
 	prevATR := prevATRTemp[inTimePeriod]
 	outReal[inTimePeriod] = prevATR
 
@@ -3565,15 +3564,15 @@ func Natr(inHigh []float64, inLow []float64, inClose []float64, inTimePeriod int
 	}
 
 	if inTimePeriod <= 1 {
-		return TRange(inHigh, inLow, inClose)
+		return TRange(inHigh, inLow, inClose, outReal)
 	}
 
 	inTimePeriodF := float64(inTimePeriod)
 	outIdx := inTimePeriod
 	today := inTimePeriod
 
-	tr := TRange(inHigh, inLow, inClose)
-	prevATRTemp := Sma(tr, inTimePeriod)
+	tr := TRange(inHigh, inLow, inClose, outReal)
+	prevATRTemp := Sma(tr, inTimePeriod, outReal)
 	prevATR := prevATRTemp[inTimePeriod]
 
 	tempValue := inClose[today]
@@ -3600,9 +3599,9 @@ func Natr(inHigh []float64, inLow []float64, inClose []float64, inTimePeriod int
 }
 
 // TRange - True Range
-func TRange(inHigh []float64, inLow []float64, inClose []float64) []float64 {
+func TRange(inHigh []float64, inLow []float64, inClose []float64, outReal []float64) []float64 {
 
-	outReal := make([]float64, len(inClose))
+	//outReal := make([]float64, len(inClose))
 
 	startIdx := 1
 	outIdx := startIdx
@@ -5117,22 +5116,15 @@ func LinearReg(inReal []float64, inTimePeriod int) []float64 {
 	sumX := inTimePeriodF * (inTimePeriodF - 1) * 0.5
 	sumXSqr := inTimePeriodF * (inTimePeriodF - 1) * (2*inTimePeriodF - 1) / 6
 	divisor := sumX*sumX - inTimePeriodF*sumXSqr
-	//initialize values of sumY and sumXY over first (inTimePeriod) input values
-	sumXY := 0.0
-	sumY := 0.0
-	i := inTimePeriod
-	for i != 0 {
-		i--
-		tempValue1 := inReal[today-i]
-		sumY += tempValue1
-		sumXY += float64(i) * tempValue1
-	}
 	for today < len(inReal) {
-		//sumX and sumXY are already available for first output value
-		if today > startIdx-1 {
-			tempValue2 := inReal[today-inTimePeriod]
-			sumXY += sumY - inTimePeriodF*tempValue2
-			sumY += inReal[today] - tempValue2
+		sumXY := 0.0
+		sumY := 0.0
+		i := inTimePeriod
+		for i != 0 {
+			i--
+			tempValue1 := inReal[today-i]
+			sumY += tempValue1
+			sumXY += float64(i) * tempValue1
 		}
 		m := (inTimePeriodF*sumXY - sumX*sumY) / divisor
 		b := (sumY - m*sumX) / inTimePeriodF
@@ -5156,25 +5148,18 @@ func LinearRegAngle(inReal []float64, inTimePeriod int) []float64 {
 	sumX := inTimePeriodF * (inTimePeriodF - 1) * 0.5
 	sumXSqr := inTimePeriodF * (inTimePeriodF - 1) * (2*inTimePeriodF - 1) / 6
 	divisor := sumX*sumX - inTimePeriodF*sumXSqr
-	//initialize values of sumY and sumXY over first (inTimePeriod) input values
-	sumXY := 0.0
-	sumY := 0.0
-	i := inTimePeriod
-	for i != 0 {
-		i--
-		tempValue1 := inReal[today-i]
-		sumY += tempValue1
-		sumXY += float64(i) * tempValue1
-	}
 	for today < len(inReal) {
-		//sumX and sumXY are already available for first output value
-		if today > startIdx-1 {
-			tempValue2 := inReal[today-inTimePeriod]
-			sumXY += sumY - inTimePeriodF*tempValue2
-			sumY += inReal[today] - tempValue2
+		sumXY := 0.0
+		sumY := 0.0
+		i := inTimePeriod
+		for i != 0 {
+			i--
+			tempValue1 := inReal[today-i]
+			sumY += tempValue1
+			sumXY += float64(i) * tempValue1
 		}
 		m := (inTimePeriodF*sumXY - sumX*sumY) / divisor
-		outReal[outIdx] = math.Atan(m) * (180.0 / math.Pi)
+		outReal[outIdx] = math.Atan(m) * (180.0 / 3.14159265358979323846)
 		outIdx++
 		today++
 	}
@@ -5194,22 +5179,15 @@ func LinearRegIntercept(inReal []float64, inTimePeriod int) []float64 {
 	sumX := inTimePeriodF * (inTimePeriodF - 1) * 0.5
 	sumXSqr := inTimePeriodF * (inTimePeriodF - 1) * (2*inTimePeriodF - 1) / 6
 	divisor := sumX*sumX - inTimePeriodF*sumXSqr
-	//initialize values of sumY and sumXY over first (inTimePeriod) input values
-	sumXY := 0.0
-	sumY := 0.0
-	i := inTimePeriod
-	for i != 0 {
-		i--
-		tempValue1 := inReal[today-i]
-		sumY += tempValue1
-		sumXY += float64(i) * tempValue1
-	}
 	for today < len(inReal) {
-		//sumX and sumXY are already available for first output value
-		if today > startIdx-1 {
-			tempValue2 := inReal[today-inTimePeriod]
-			sumXY += sumY - inTimePeriodF*tempValue2
-			sumY += inReal[today] - tempValue2
+		sumXY := 0.0
+		sumY := 0.0
+		i := inTimePeriod
+		for i != 0 {
+			i--
+			tempValue1 := inReal[today-i]
+			sumY += tempValue1
+			sumXY += float64(i) * tempValue1
 		}
 		m := (inTimePeriodF*sumXY - sumX*sumY) / divisor
 		outReal[outIdx] = (sumY - m*sumX) / inTimePeriodF
@@ -5232,22 +5210,15 @@ func LinearRegSlope(inReal []float64, inTimePeriod int) []float64 {
 	sumX := inTimePeriodF * (inTimePeriodF - 1) * 0.5
 	sumXSqr := inTimePeriodF * (inTimePeriodF - 1) * (2*inTimePeriodF - 1) / 6
 	divisor := sumX*sumX - inTimePeriodF*sumXSqr
-	//initialize values of sumY and sumXY over first (inTimePeriod) input values
-	sumXY := 0.0
-	sumY := 0.0
-	i := inTimePeriod
-	for i != 0 {
-		i--
-		tempValue1 := inReal[today-i]
-		sumY += tempValue1
-		sumXY += float64(i) * tempValue1
-	}
 	for today < len(inReal) {
-		//sumX and sumXY are already available for first output value
-		if today > startIdx-1 {
-			tempValue2 := inReal[today-inTimePeriod]
-			sumXY += sumY - inTimePeriodF*tempValue2
-			sumY += inReal[today] - tempValue2
+		sumXY := 0.0
+		sumY := 0.0
+		i := inTimePeriod
+		for i != 0 {
+			i--
+			tempValue1 := inReal[today-i]
+			sumY += tempValue1
+			sumXY += float64(i) * tempValue1
 		}
 		outReal[outIdx] = (inTimePeriodF*sumXY - sumX*sumY) / divisor
 		outIdx++
@@ -5296,22 +5267,15 @@ func Tsf(inReal []float64, inTimePeriod int) []float64 {
 	sumX := inTimePeriodF * (inTimePeriodF - 1.0) * 0.5
 	sumXSqr := inTimePeriodF * (inTimePeriodF - 1) * (2*inTimePeriodF - 1) / 6
 	divisor := sumX*sumX - inTimePeriodF*sumXSqr
-	//initialize values of sumY and sumXY over first (inTimePeriod) input values
-	sumXY := 0.0
-	sumY := 0.0
-	i := inTimePeriod
-	for i != 0 {
-		i--
-		tempValue1 := inReal[today-i]
-		sumY += tempValue1
-		sumXY += float64(i) * tempValue1
-	}
 	for today < len(inReal) {
-		//sumX and sumXY are already available for first output value
-		if today > startIdx-1 {
-			tempValue2 := inReal[today-inTimePeriod]
-			sumXY += sumY - inTimePeriodF*tempValue2
-			sumY += inReal[today] - tempValue2
+		sumXY := 0.0
+		sumY := 0.0
+		i := inTimePeriod
+		for i != 0 {
+			i--
+			tempValue1 := inReal[today-i]
+			sumY += tempValue1
+			sumXY += float64(i) * tempValue1
 		}
 		m := (inTimePeriodF*sumXY - sumX*sumY) / divisor
 		b := (sumY - m*sumX) / inTimePeriodF
@@ -5863,6 +5827,7 @@ func Sum(inReal []float64, inTimePeriod int) []float64 {
 
 	return outReal
 }
+
 
 // HeikinashiCandles - from candle values extracts heikinashi candle values.
 //
